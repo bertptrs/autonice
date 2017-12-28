@@ -57,3 +57,14 @@ pub fn read_procfs() -> io::Result<Vec<Process>>
 
     return Ok(result);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_proc_readable()
+    {
+        assert!(read_procfs().unwrap().len() > 0);
+    }
+}
