@@ -24,7 +24,7 @@ fn list_contains(p: &Process, list: &Vec<String>) -> bool
 fn update_nice(p: &Process, set: &Settings)
 {
     if list_contains(p, &set.get_whitelist()) && !list_contains(p, &set.get_blacklist()) {
-        let new_prio = std::cmp::max(p.nice + set.get_step() + 1, 19) as i32;
+        let new_prio = std::cmp::min(p.nice + set.get_step(), 19) as i32;
 
         unsafe { setpriority(PRIO_PROCESS as u32, p.pid, new_prio); }
     }
