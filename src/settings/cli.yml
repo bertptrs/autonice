@@ -1,0 +1,27 @@
+name: autonice
+author: Bert Peters <bert@bertptrs.nl>
+about: Automatically nice naughty programs
+args:
+    - step:
+        help: step to increase niceness by
+        short: s
+        long: step
+        takes_value: true
+
+    - interval:
+        help: process polling interval
+        short: i
+        long: interval
+        takes_value: true
+
+    - whitelist:
+        help: (partial) program names to nice
+        multiple: true
+
+    - blacklist:
+        help: (partial) programs to never nice
+        short: b
+        long: blacklist
+        multiple: true
+        number_of_values: 1
+        takes_value: true

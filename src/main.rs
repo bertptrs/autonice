@@ -1,31 +1,46 @@
+#[macro_use] extern crate clap;
+
 mod procreader;
+mod settings;
 
 extern crate libc;
 
 use self::libc::{setpriority,PRIO_PROCESS};
 use procreader::{read_procfs,Process};
-
 use std::thread;
-use std::time;
+use settings::Settings;
 
-fn update_nice(p: &Process)
+fn list_contains(p: &Process, list: &Vec<String>) -> bool
 {
-    if p.prog.contains("autonice") && p.nice < 19 {
-        unsafe { setpriority(PRIO_PROCESS as u32, p.pid, p.nice as i32 + 1); }
+    for entry in list {
+        if p.prog.contains(entry) {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn update_nice(p: &Process, set: &Settings)
+{
+    if list_contains(p, &set.get_whitelist()) && !list_contains(p, &set.get_blacklist()) {
+        let new_prio = std::cmp::max(p.nice + set.get_step() + 1, 19) as i32;
+
+        unsafe { setpriority(PRIO_PROCESS as u32, p.pid, new_prio); }
     }
 }
 
 fn main()
 {
-    let timeout = time::Duration::from_secs(5);
+    let set = Settings::from_cli();
     loop {
         match read_procfs() {
             Ok(x) => for p in x {
-                update_nice(&p);
+                update_nice(&p, &set);
             },
             Err(x) => println!("Error while reading: {}", x)
         }
 
-        thread::sleep(timeout);
+        thread::sleep(set.get_interval());
     }
 }
