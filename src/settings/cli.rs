@@ -43,7 +43,6 @@ mod tests {
 
         assert_eq!(settings.get_step(), 12);
         assert_eq!(settings.get_interval().as_secs(), 3);
-        println!("{:?}", settings.get_whitelist());
         assert_eq!(settings.get_blacklist().len(), 2);
         assert_eq!(settings.get_whitelist().len(), 3);
     }

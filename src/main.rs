@@ -8,7 +8,7 @@ extern crate libc;
 use self::libc::{setpriority,PRIO_PROCESS};
 use procreader::{read_procfs,Process};
 use std::thread;
-use settings::Settings;
+use settings::{Settings,ConfigReadError};
 
 fn list_contains(p: &Process, list: &Vec<String>) -> bool
 {
@@ -32,7 +32,12 @@ fn update_nice(p: &Process, set: &Settings)
 
 fn main()
 {
-    let set = Settings::from_cli();
+    let mut set = Settings::from_cli();
+    match Settings::from_config() {
+        Ok(mut c) => { c.amend(set); set = c},
+        Err(ConfigReadError::InvalidYamlError) => panic!("Invalid YAML config file"),
+        Err(_) => {},
+    }
     loop {
         match read_procfs() {
             Ok(x) => for p in x {

@@ -1,6 +1,8 @@
 mod cli;
+mod config;
 
 use std::time::Duration;
+pub use self::config::ConfigReadError;
 
 pub struct Settings {
     interval: Option<Duration>,
@@ -14,6 +16,29 @@ impl Settings {
     pub fn from_cli() -> Settings
     {
         cli::parse()
+    }
+
+    pub fn from_config() -> Result<Settings, ConfigReadError>
+    {
+        config::parse()
+    }
+
+    pub fn amend(&mut self, s: Settings) {
+        if s.step.is_some() {
+            self.step = s.step;
+        }
+
+        if s.interval.is_some() {
+            self.interval = s.interval;
+        }
+
+        if s.blacklist.is_some() {
+            self.blacklist = s.blacklist;
+        }
+
+        if s.whitelist.is_some() {
+            self.whitelist = s.whitelist;
+        }
     }
 
     pub fn get_interval(&self) -> Duration
@@ -58,5 +83,17 @@ mod tests {
         let whitelist = settings.get_whitelist();
         assert_eq!(1, whitelist.len());
         assert!(whitelist.contains(&String::from("autonice")));
+    }
+
+    #[test]
+    fn test_amend_settings()
+    {
+        let mut settings = Settings{interval: Some(Duration::from_secs(12)), step: Some(3), blacklist: None, whitelist: None};
+        let amend = Settings{interval: None, step: Some(5), blacklist: None, whitelist: Some(vec!(String::from("autonice")))};
+
+        settings.amend(amend);
+        assert_eq!(settings.get_interval().as_secs(), 12);
+        assert_eq!(settings.get_step(), 5);
+        assert_eq!(settings.get_whitelist().len(), 1);
     }
 }
