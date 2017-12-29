@@ -1,10 +1,14 @@
 extern crate libc;
+extern crate nix;
 
 use self::libc::{setpriority,PRIO_PROCESS};
+use self::nix::sys::signal;
 use settings::Settings;
 use std::cmp::min;
 use std::thread;
 use procreader::{read_procfs,Process};
+
+static mut SHOULD_RUN: bool = false;
 
 fn list_contains(p: &Process, list: &[String]) -> bool
 {
@@ -28,7 +32,14 @@ fn update_nice(p: &Process, set: &Settings)
 
 pub fn autonice(set: &Settings)
 {
-    loop {
+    let action = signal::SigAction::new(signal::SigHandler::Handler(handle_sigint),
+                                        signal::SaFlags::empty(),
+                                        signal::SigSet::empty());
+    unsafe {
+        SHOULD_RUN = true;
+        signal::sigaction(signal::SIGINT, &action).expect("Couldn't register signal handler");
+    }
+    while unsafe {SHOULD_RUN} {
         match read_procfs() {
             Ok(x) => for p in x {
                 update_nice(&p, &set);
@@ -38,6 +49,12 @@ pub fn autonice(set: &Settings)
 
         thread::sleep(set.get_interval());
     }
+}
+
+extern fn handle_sigint(_: i32)
+{
+    println!("Received SIGINT, shutting down.");
+    unsafe {SHOULD_RUN = false;}
 }
 
 #[cfg(test)]
