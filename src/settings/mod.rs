@@ -4,6 +4,7 @@ mod config;
 use std::time::Duration;
 pub use self::config::ConfigReadError;
 
+#[derive(Default)]
 pub struct Settings {
     interval: Option<Duration>,
     step: Option<i8>,
@@ -75,7 +76,7 @@ mod tests {
     #[test]
     fn test_default_settings()
     {
-        let settings = Settings{interval: None, step: None, blacklist: None, whitelist: Some(vec!(String::from("autonice")))};
+        let settings = Settings{whitelist: Some(vec!(String::from("autonice"))), ..Default::default()};
         assert_eq!(1, settings.get_step());
         assert_eq!(Duration::from_secs(5), settings.get_interval());
         assert_eq!(0, settings.get_blacklist().len());
@@ -88,8 +89,8 @@ mod tests {
     #[test]
     fn test_amend_settings()
     {
-        let mut settings = Settings{interval: Some(Duration::from_secs(12)), step: Some(3), blacklist: None, whitelist: None};
-        let amend = Settings{interval: None, step: Some(5), blacklist: None, whitelist: Some(vec!(String::from("autonice")))};
+        let mut settings = Settings{interval: Some(Duration::from_secs(12)), step: Some(3), ..Default::default()};
+        let amend = Settings{step: Some(5), whitelist: Some(vec!(String::from("autonice"))), ..Default::default()};
 
         settings.amend(amend);
         assert_eq!(settings.get_interval().as_secs(), 12);
